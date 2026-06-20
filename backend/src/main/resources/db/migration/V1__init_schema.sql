@@ -1,9 +1,18 @@
 CREATE TABLE users (
     id BIGSERIAL PRIMARY KEY,
-    full_name VARCHAR(255) NOT NULL,
-    email VARCHAR(255) NOT NULL UNIQUE,
+    full_name VARCHAR(120) NOT NULL,
+    email VARCHAR(160) NOT NULL UNIQUE,
     password_hash VARCHAR(255) NOT NULL,
-    role VARCHAR(50) NOT NULL DEFAULT 'USER',
+    role VARCHAR(30) NOT NULL DEFAULT 'USER',
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE TABLE doctors (
+    id BIGSERIAL PRIMARY KEY,
+    full_name VARCHAR(120) NOT NULL,
+    specialization VARCHAR(120) NOT NULL,
+    active BOOLEAN NOT NULL DEFAULT TRUE,
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
@@ -19,7 +28,6 @@ CREATE TABLE appointment_slots (
     CONSTRAINT chk_slot_time CHECK (slot_end > slot_start),
     CONSTRAINT uk_doctor_slot UNIQUE (doctor_id, slot_start, slot_end)
 );
-
 
 CREATE TABLE appointments (
     id BIGSERIAL PRIMARY KEY,
@@ -48,7 +56,6 @@ CREATE TABLE appointment_logs (
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
-
 CREATE UNIQUE INDEX uk_active_slot_booking
 ON appointments(slot_id)
 WHERE status = 'BOOKED';
@@ -73,7 +80,6 @@ VALUES
     ('Dr. Ananya Rao', 'General Medicine'),
     ('Dr. Vikram Mehta', 'Cardiology'),
     ('Dr. Priya Nair', 'Dermatology');
-
 
 INSERT INTO appointment_slots (doctor_id, slot_start, slot_end)
 SELECT
