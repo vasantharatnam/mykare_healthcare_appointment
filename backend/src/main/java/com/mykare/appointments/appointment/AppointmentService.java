@@ -1,6 +1,10 @@
 package com.mykare.appointments.appointment;
 
+import java.util.List;
+
+import com.mykare.appointments.appointment.dto.AppointmentLogResponse;
 import com.mykare.appointments.appointment.dto.AppointmentResponse;
+import com.mykare.appointments.appointment.dto.CancelAppointmentRequest;
 import com.mykare.appointments.appointment.dto.CreateAppointmentRequest;
 import com.mykare.appointments.common.ApiException;
 import com.mykare.appointments.slot.AppointmentSlot;
@@ -13,6 +17,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+
+@Service
 public class AppointmentService {
     
    private final AppointmentRepository appointmentRepository;
@@ -60,6 +66,59 @@ public class AppointmentService {
              throw new ApiException(HttpStatus.CONFLICT, "slot is already booked");
          }
    }
+
+   @Transactional
+   public AppointmentResponse cancelAppointment(Long userId, Long appointmentId, CancelAppointmentRequest  request){
+       Appointment appointment = appointmentRepository.findByIdAndUserId(appointmentId, userId)
+                                  .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "Appointment not found"));
+       
+       if (appointment.getStatus() ==  AppointmentStatus.CANCELLED){
+         throw new ApiException(HttpStatus.BAD_REQUEST, "Appointment is already cancelled");
+       }        
+       
+       String reason = request.reason() == null || request.reason().isBlank() ? "Cancelled by user" : request.reason().trim();
+
+       appointment.cancel(reason);
+
+       AppointmentLog log = new AppointmentLog(
+                appointment,
+                "APPOINTMENT_CANCELLED",
+                reason
+        );
+
+        appointmentLogRepository.save(log);
+
+        return toResponse(appointment);
+   }
+
+   @Transactional(readOnly = true)
+    public List<AppointmentResponse> getMyAppointments(Long userId) {
+        return appointmentRepository.findByUserIdOrderByCreatedAtDesc(userId)
+                .stream()
+                .map(this::toResponse)
+                .toList();
+    }
+
+    @Transactional(readOnly = true)
+    public List<AppointmentLogResponse> getAppointmentLogs(Long userId, Long appointmentId) {
+        Appointment appointment = appointmentRepository.findByIdAndUserId(appointmentId, userId)
+                .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "Appointment not found"));
+
+        return appointmentLogRepository.findByAppointmentIdOrderByCreatedAtDesc(appointment.getId())
+                .stream()
+                .map(this::toLogResponse)
+                .toList();
+    }
+
+ private AppointmentLogResponse toLogResponse(AppointmentLog log) {
+        return new AppointmentLogResponse(
+                log.getId(),
+                log.getEventType(),
+                log.getMessage(),
+                log.getCreatedAt()
+        );
+    }
+
 
     private AppointmentResponse toResponse(Appointment appointment) {
         return new AppointmentResponse(

@@ -60,6 +60,12 @@ public class Appointment {
         this.processingStatus = ProcessingStatus.PENDING;
     }
 
+    public void cancel(String reason) {
+    this.status = AppointmentStatus.CANCELLED;
+    this.reason = reason;
+    this.cancelledAt = OffsetDateTime.now();
+   }
+   
     @PrePersist
     void onCreate() {
         OffsetDateTime now = OffsetDateTime.now();
@@ -106,5 +112,9 @@ public class Appointment {
 
     public OffsetDateTime getCancelledAt() {
         return cancelledAt;
+    }
+
+    public OffsetDateTime getUpdatedAt() {
+    return updatedAt;
     }
 }
