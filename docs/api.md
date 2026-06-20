@@ -54,6 +54,46 @@ http://localhost:8080/swagger-ui.html
 }
 ```
 
+## Appointment APIs
+
+| Method | Path | Auth Required | Purpose |
+|---|---|---|---|
+| `POST` | `/api/appointments` | Yes | Book an appointment |
+
+### Book Appointment Request
+
+```json
+{
+  "slotId": 1
+}
+```
+
+### Book Appointment Response
+
+```json
+{
+  "appointmentId": 1,
+  "slotId": 1,
+  "doctorId": 1,
+  "doctorName": "Dr. Ananya Rao",
+  "specialization": "General Medicine",
+  "slotStart": "2026-07-01T09:00:00+05:30",
+  "slotEnd": "2026-07-01T09:30:00+05:30",
+  "status": "BOOKED",
+  "processingStatus": "PENDING",
+  "createdAt": "2026-06-21T10:00:00+05:30"
+}
+```
+
+### Book Appointment Curl
+
+```bash
+curl -X POST http://localhost:8080/api/appointments \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer <token>" \
+  -d '{"slotId":1}'
+```
+
 ## Authentication
 
 Protected APIs require the JWT token in the `Authorization` header.

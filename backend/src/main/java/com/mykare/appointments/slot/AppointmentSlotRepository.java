@@ -2,12 +2,15 @@ package com.mykare.appointments.slot;
 
 import java.time.OffsetDateTime;
 import java.util.List;
+import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 public interface AppointmentSlotRepository extends JpaRepository<AppointmentSlot, Long> {
+
+    Optional<AppointmentSlot> findByIdAndActiveTrue(Long id);
 
     @Query(value = """
             SELECT s.*
