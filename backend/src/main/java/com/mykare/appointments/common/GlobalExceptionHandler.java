@@ -7,6 +7,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.security.core.AuthenticationException;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
@@ -40,4 +41,16 @@ public class GlobalExceptionHandler {
 
         return ResponseEntity.badRequest().body(response);
     }
+
+    @ExceptionHandler(AuthenticationException.class)
+      public ResponseEntity<ErrorResponse> handleAuthenticationException(AuthenticationException ex) {
+          ErrorResponse response = new ErrorResponse(
+               OffsetDateTime.now(),
+               401,
+               "Unauthorized",
+               List.of("Invalid email or password")
+        );
+
+        return ResponseEntity.status(401).body(response);
+      }
 }

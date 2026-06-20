@@ -43,3 +43,6 @@ app:
   kafka:
     bootstrap-servers: ${KAFKA_BROKER:localhost:9092}
     appointment-events-topic: ${APPOINTMENT_EVENTS_TOPIC:appointment-events}
+  jwt:
+    secret: ${JWT_SECRET:ARj4ptWyFeD26g9nQ8fjeTjLRKjjTcRxzstEfgC6cy8}
+    expiration-minutes: ${JWT_EXPIRATION_MINUTES:1440}
