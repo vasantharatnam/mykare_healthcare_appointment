@@ -18,66 +18,71 @@ import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class AuthService {
-     
-     private final UserRepository userRepository;
-     private final PasswordEncoder passwordEncoder;
-     private final AuthenticationManager authenticationManager;
+
+    private final UserRepository userRepository;
+    private final PasswordEncoder passwordEncoder;
+    private final AuthenticationManager authenticationManager;
     private final JwtService jwtService;
 
+    public AuthService(
+            UserRepository userRepository,
+            PasswordEncoder passwordEncoder,
+            AuthenticationManager authenticationManager,
+            JwtService jwtService
+    ) {
+        this.userRepository = userRepository;
+        this.passwordEncoder = passwordEncoder;
+        this.authenticationManager = authenticationManager;
+        this.jwtService = jwtService;
+    }
 
-     public AuthService(UserRepository userRepository, PasswordEncoder passwordEncoder
-        , AuthenticationManager authenticationManager, JwtService jwtService
-     ){
-            this.userRepository = userRepository;
-            this.passwordEncoder = passwordEncoder;
-            this.authenticationManager = authenticationManager;
-            this.jwtService = jwtService;
-     }
+    @Transactional
+    public AuthResponse register(RegisterRequest request) {
+        String normalizedEmail = request.email().trim().toLowerCase();
 
-     @Transactional
-     public AuthResponse register(RegisterRequest request) {
-            String normalizedEmail = request.email().trim().toLowerCase();
+        if (userRepository.existsByEmail(normalizedEmail)) {
+            throw new ApiException(HttpStatus.CONFLICT, "User already exists with this email");
+        }
 
-            if(userRepository.existsByEmail(normalizedEmail)){
-                throw new ApiException(HttpStatus.CONFLICT, "User already exists with this email");
-            }
+        User user = new User(
+                request.fullName().trim(),
+                normalizedEmail,
+                passwordEncoder.encode(request.password())
+        );
 
-            User user = new User(request.fullName().trim(),  normalizedEmail, passwordEncoder.encode(request.password()));
+        User savedUser = userRepository.save(user);
+        String token = jwtService.generateToken(new UserPrincipal(savedUser));
 
-            User savedUser = userRepository.save(user);
-            String token = jwtService.generateToken(new UserPrincipal(savedUser));
+        return toResponse(savedUser, token, "User registered successfully");
+    }
 
-            return toResponse(savedUser, token, "User Registration successful");
-     }
+    @Transactional(readOnly = true)
+    public AuthResponse login(LoginRequest request) {
+        String normalizedEmail = request.email().trim().toLowerCase();
 
-     @Transactional(readOnly = true)
-     public AuthResponse login(LoginRequest request){
-         String normalizedEmail = request.email().trim().toLowerCase();
-
-         authenticationManager.authenticate(
+        authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(
                         normalizedEmail,
                         request.password()
                 )
         );
 
-         User user = userRepository.findByEmail(normalizedEmail)
-                    .orElseThrow(() -> new ApiException(HttpStatus.UNAUTHORIZED, "Invalid email or password"));
+        User user = userRepository.findByEmail(normalizedEmail)
+                .orElseThrow(() -> new ApiException(HttpStatus.UNAUTHORIZED, "Invalid email or password"));
 
-       String token = jwtService.generateToken(new UserPrincipal(user));
+        String token = jwtService.generateToken(new UserPrincipal(user));
 
-            return toResponse(user, token, "Login successful");
-     }
+        return toResponse(user, token, "Login successful");
+    }
 
-        private AuthResponse toResponse(User user, String token, String message) {
-                return new AuthResponse(
-                        user.getId(),
-                        user.getFullName(),
-                        user.getEmail(),
-                        user.getRole().name(),
-                        token,
-                        message
-                );
-        }
+    private AuthResponse toResponse(User user, String token, String message) {
+        return new AuthResponse(
+                user.getId(),
+                user.getFullName(),
+                user.getEmail(),
+                user.getRole().name(),
+                token,
+                message
+        );
+    }
 }
-

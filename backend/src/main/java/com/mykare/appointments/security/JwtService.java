@@ -15,22 +15,23 @@ import org.springframework.stereotype.Service;
 
 @Service
 public class JwtService {
-      
-      private final SecretKey secretKey;
-      private final long expirationMinutes;
 
-      public JwtService( @Value("${jwt.secret}") String secretKey,
-                         @Value("${jwt.expiration-minutes}") long expirationMinutes) {
-            this.secretKey = Keys.hmacShaKeyFor(secretKey.getBytes(StandardCharsets.UTF_8));
-            this.expirationMinutes = expirationMinutes;
+    private final SecretKey secretKey;
+    private final long expirationMinutes;
 
-      }
+    public JwtService(
+            @Value("${app.jwt.secret}") String secret,
+            @Value("${app.jwt.expiration-minutes}") long expirationMinutes
+    ) {
+        this.secretKey = Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8));
+        this.expirationMinutes = expirationMinutes;
+    }
 
-    public String generateToken(UserPrincipal principal){
-         Instant now = Instant.now();
-         Instant expiresAt = now.plusSeconds(expirationMinutes * 60);
+    public String generateToken(UserPrincipal principal) {
+        Instant now = Instant.now();
+        Instant expiresAt = now.plusSeconds(expirationMinutes * 60);
 
-         return Jwts.builder()
+        return Jwts.builder()
                 .subject(principal.getUsername())
                 .claim("userId", principal.getId())
                 .claim("fullName", principal.getFullName())
@@ -41,16 +42,16 @@ public class JwtService {
                 .compact();
     }
 
-    public String extractUsername(String token){
-         return extractAllClaims(token).getSubject();
+    public String extractUsername(String token) {
+        return extractAllClaims(token).getSubject();
     }
 
-    public boolean isValid(String token, UserPrincipal principal){
-         String username = extractUsername(token);
-         return (username.equals(principal.getUsername()) && !isExpired(token));
+    public boolean isValid(String token, UserPrincipal principal) {
+        String username = extractUsername(token);
+        return username.equals(principal.getUsername()) && !isExpired(token);
     }
 
-    private boolean isExpired(String token){
+    private boolean isExpired(String token) {
         return extractAllClaims(token).getExpiration().before(new Date());
     }
 
