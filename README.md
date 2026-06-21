@@ -33,3 +33,33 @@ The final application will support:
 - Spring Boot to Python event flow through Kafka
 - Swagger API documentation
 - Dockerized local setup
+
+## Docker Compose Setup
+
+Run the full system:
+
+```bash
+docker compose up --build
+```
+
+Services:
+
+| Service | URL |
+|---|---|
+| Frontend | `http://localhost:5173` |
+| Backend | `http://localhost:8080` |
+| Swagger | `http://localhost:8080/swagger-ui.html` |
+| PostgreSQL | `localhost:5433` |
+| Kafka | `localhost:9092` |
+
+Stop services:
+
+```bash
+docker compose down
+```
+
+Reset database volume:
+
+```bash
+docker compose down -v
+```

@@ -12,6 +12,11 @@ services:
       - "${POSTGRES_PORT:-5433}:5432"
     volumes:
       - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-mykare} -d ${POSTGRES_DB:-mykare_appointments}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   zookeeper:
     image: confluentinc/cp-zookeeper:7.6.1
@@ -36,6 +41,75 @@ services:
       KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_INTERNAL:PLAINTEXT
       KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT_INTERNAL
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+    healthcheck:
+      test: ["CMD", "kafka-topics", "--bootstrap-server", "localhost:9092", "--list"]
+      interval: 10s
+      timeout: 10s
+      retries: 10
+
+  kafka-init:
+    image: confluentinc/cp-kafka:7.6.1
+    container_name: mykare-kafka-init
+    depends_on:
+      kafka:
+        condition: service_healthy
+    environment:
+      APPOINTMENT_EVENTS_TOPIC: ${APPOINTMENT_EVENTS_TOPIC:-appointment-events}
+    volumes:
+      - ./scripts/create-kafka-topic.sh:/create-kafka-topic.sh
+    command: ["/bin/bash", "/create-kafka-topic.sh"]
+
+  backend:
+    build:
+      context: ./backend
+    container_name: mykare-backend
+    depends_on:
+      postgres:
+        condition: service_healthy
+      kafka-init:
+        condition: service_completed_successfully
+    environment:
+      SERVER_PORT: 8080
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: 5432
+      POSTGRES_DB: ${POSTGRES_DB:-mykare_appointments}
+      POSTGRES_USER: ${POSTGRES_USER:-mykare}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-mykare_password}
+      KAFKA_BROKER: kafka:29092
+      APPOINTMENT_EVENTS_TOPIC: ${APPOINTMENT_EVENTS_TOPIC:-appointment-events}
+      JWT_SECRET: ${JWT_SECRET:-ARj4ptWyFeD26g9nQ8fjeTjLRKjjTcRxzstEfgC6cy8}
+    ports:
+      - "8080:8080"
+
+  worker:
+    build:
+      context: ./worker
+    container_name: mykare-worker
+    depends_on:
+      backend:
+        condition: service_started
+      kafka-init:
+        condition: service_completed_successfully
+    environment:
+      KAFKA_BROKER: kafka:29092
+      APPOINTMENT_EVENTS_TOPIC: ${APPOINTMENT_EVENTS_TOPIC:-appointment-events}
+      KAFKA_CONSUMER_GROUP: notification-worker
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: 5432
+      POSTGRES_DB: ${POSTGRES_DB:-mykare_appointments}
+      POSTGRES_USER: ${POSTGRES_USER:-mykare}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-mykare_password}
+
+  frontend:
+    build:
+      context: ./frontend
+    container_name: mykare-frontend
+    depends_on:
+      - backend
+    ports:
+      - "5173:80"
 
 volumes:
   postgres-data:
