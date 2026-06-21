@@ -36,7 +36,11 @@ def decode_event(message_value: bytes) -> dict[str, Any]:
     return json.loads(message_value.decode("utf-8"))
 
 
-def process_event(event: dict[str, Any], database: Database, notification_service: NotificationService) -> None:
+def process_event(
+    event: dict[str, Any],
+    database: Database,
+    notification_service: NotificationService,
+) -> None:
     appointment_id = int(event["appointmentId"])
     event_type = event["eventType"]
 
@@ -68,15 +72,14 @@ def main() -> int:
             if message is None:
                 continue
 
-            if message.error():
-               if message.error().code() == KafkaError._PARTITION_EOF:
+            error = message.error()
+
+            if error is not None:
+                if error.code() == KafkaError._PARTITION_EOF:
                     continue
 
-            if message.error().code() == KafkaError.UNKNOWN_TOPIC_OR_PART:
-                    print(f"Topic {settings.kafka_topic} is not available yet. Waiting...")
-                    continue
-
-            raise KafkaException(message.error())
+                print(f"Kafka consumer error: {error}")
+                continue
 
             try:
                 event = decode_event(message.value())
