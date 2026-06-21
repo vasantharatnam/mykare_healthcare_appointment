@@ -260,3 +260,41 @@ docker exec -it mykare-kafka kafka-console-consumer \
   --topic appointment-events \
   --from-beginning
 ```
+
+## Final Demo Links
+
+| Item | Link |
+|---|---|
+| Frontend | `http://localhost:5173` |
+| Swagger UI | `http://localhost:8080/swagger-ui.html` |
+| Health Check | `http://localhost:8080/api/health` |
+| Curl Flow | `docs/curl-flow.md` |
+| Database Schema | `docs/schema.md` |
+| Architecture | `docs/architecture.md` |
+| Demo Checklist | `docs/demo-checklist.md` |
+
+## Submission Notes
+
+The repository includes:
+
+- Backend source code
+- Frontend source code
+- Python worker source code
+- Docker Compose setup
+- Flyway database migration
+- Swagger API documentation
+- Database schema documentation
+- Demo checklist
+- Curl demo flow
+
+For the demo video, start with:
+
+```bash
+docker compose up --build
+```
+
+Then open:
+
+```text
+http://localhost:5173
+```
