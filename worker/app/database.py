@@ -62,7 +62,7 @@ class Database:
                 cur.execute(
                     """
                     UPDATE appointments
-                    SET processing_stauts = 'NOTIFICATION_SENT',
+                    SET processing_status = 'NOTIFICATION_SENT',
                           updated_at = NOW()
                     WHERE  id = %s
                     """,
@@ -71,7 +71,7 @@ class Database:
 
                 cur.execute(
                     """
-                    INSERT INTO appointmet_logs (appointment_id, event_type, message)
+                    INSERT INTO appointment_logs (appointment_id, event_type, message)
                     VALUES (%s, %s, %s)
                     """,
                     (
@@ -97,7 +97,7 @@ class Database:
 
                 cur.execute(
                     """
-                    INSERT INTO appointmet_logs (appointment_id, event_type, message)
+                    INSERT INTO appointment_logs (appointment_id, event_type, message)
                     VALUES (%s, %s, %s)
                     """,
                     (
