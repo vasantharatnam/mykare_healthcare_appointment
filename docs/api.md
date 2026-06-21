@@ -226,12 +226,47 @@ curl http://localhost:8080/api/appointments/1/logs \
   -H "Authorization: Bearer <token>"
 ```
 
+## Appointment Events
+
+Appointment booking and cancellation publish events to Kafka.
+
+| Event Type | Trigger |
+|---|---|
+| `APPOINTMENT_BOOKED` | User books an appointment |
+| `APPOINTMENT_CANCELLED` | User cancels an appointment |
+
+Kafka topic:
+
+```text
+appointment-events
+```
+
+### Event Payload
+
+```json
+{
+  "eventId": "9f78d218-5f8d-4aa1-97c0-02c29d14f555",
+  "eventType": "APPOINTMENT_BOOKED",
+  "appointmentId": 1,
+  "userId": 1,
+  "doctorId": 1,
+  "doctorName": "Dr. Ananya Rao",
+  "specialization": "General Medicine",
+  "slotId": 1,
+  "slotStart": "2026-07-01T09:00:00+05:30",
+  "slotEnd": "2026-07-01T09:30:00+05:30",
+  "status": "BOOKED",
+  "processingStatus": "PENDING",
+  "occurredAt": "2026-06-21T10:00:00+05:30"
+}
+```
+
 ## Current Run Commands
 
 Start database:
 
 ```bash
-docker compose up -d postgres
+docker compose up -d postgres zookeeper kafka
 ```
 
 Run backend:

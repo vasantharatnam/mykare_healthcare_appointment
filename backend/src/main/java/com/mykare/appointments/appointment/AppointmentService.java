@@ -17,6 +17,11 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.mykare.appointments.event.AppointmentEventFactory;
+import com.mykare.appointments.event.AppointmentEventType;
+
+import org.springframework.context.ApplicationEventPublisher;
+
 
 @Service
 public class AppointmentService {
@@ -25,17 +30,23 @@ public class AppointmentService {
    private final AppointmentLogRepository appointmentLogRepository;
    private final AppointmentSlotRepository appointmentSlotRepository;
    private final UserRepository userRepository;
+   private final ApplicationEventPublisher applicationEventPublisher;
+   private final AppointmentEventFactory appointmentEventFactory;
 
    public AppointmentService(
               AppointmentRepository appointmentRepository,
               AppointmentLogRepository appointmentLogRepository,
               AppointmentSlotRepository appointmentSlotRepository,
-              UserRepository userRepository
+              UserRepository userRepository,
+              ApplicationEventPublisher applicationEventPublisher,
+              AppointmentEventFactory appointmentEventFactory
    ){
          this.appointmentRepository = appointmentRepository;
          this.appointmentLogRepository = appointmentLogRepository;
          this.appointmentSlotRepository = appointmentSlotRepository;
          this.userRepository = userRepository;
+         this.applicationEventPublisher = applicationEventPublisher;
+         this.appointmentEventFactory = appointmentEventFactory;
    }
 
    @Transactional
@@ -60,6 +71,8 @@ public class AppointmentService {
 
              AppointmentLog log = new AppointmentLog(savedAppointment, "APPOINTMENT_BOOKED" , "Appointment booked successfully");
              appointmentLogRepository.save(log);
+
+             applicationEventPublisher.publishEvent( appointmentEventFactory.create(savedAppointment, AppointmentEventType.APPOINTMENT_BOOKED));
 
              return toResponse(savedAppointment);
          } catch (DataIntegrityViolationException e) {
@@ -87,6 +100,8 @@ public class AppointmentService {
         );
 
         appointmentLogRepository.save(log);
+
+        applicationEventPublisher.publishEvent( appointmentEventFactory.create(appointment, AppointmentEventType.APPOINTMENT_CANCELLED));
 
         return toResponse(appointment);
    }
