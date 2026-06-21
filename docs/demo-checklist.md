@@ -1,12 +1,16 @@
 # Demo Checklist
 
-- Register a new user
-- Login
-- Fetch available slots
-- Book an appointment
-- Verify duplicate booking is blocked
-- See appointment event processing status
-- Cancel appointment
-- View appointment history and logs
-- Show Swagger UI
-- Show Docker Compose startup
+## Before Demo
+
+- Docker Desktop is running
+- Port `8080` is free
+- Port `5173` is free
+- Port `5433` is free
+- `.env` has correct values
+- Latest code is pushed to GitHub
+
+## Start System
+
+```bash
+docker compose down -v
+docker compose up --build
