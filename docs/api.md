@@ -261,6 +261,19 @@ appointment-events
 }
 ```
 
+## Python Worker
+
+The Python worker consumes appointment events from Kafka and updates appointment processing status.
+
+### Worker Run Command
+
+```bash
+cd worker
+python3 -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
+POSTGRES_PORT=5433 python -m app.main
+
 ## Current Run Commands
 
 Start database:
