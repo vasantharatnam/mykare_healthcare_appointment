@@ -73,11 +73,20 @@ Kafka
 | PostgreSQL | `localhost:5433` |
 | Kafka | `localhost:9092` |
 
+```md
 ## Run with Docker Compose
+This is the recommended way to run the project. Docker Compose starts PostgreSQL, Kafka, backend, worker, and frontend together.
+
+```md
+## Prerequisites
+
+- Docker Desktop
+- Git
 
 From project root:
 
 ```bash
+cp .env.example .env
 docker compose up --build
 ```
 
