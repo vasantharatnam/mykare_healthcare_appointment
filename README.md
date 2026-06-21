@@ -119,7 +119,27 @@ docker compose down -v
 Start infrastructure:
 
 ```bash
-docker compose up -d postgres zookeeper kafka
+docker compose up -d postgres zookeeper kafka kafka-init
+
+Verify Kafka topic:
+
+docker exec -it mykare-kafka kafka-topics \
+  --bootstrap-server localhost:9092 \
+  --list
+
+Expected topic:
+
+appointment-events
+
+If appointment-events is missing, create it manually:
+
+docker exec -it mykare-kafka kafka-topics \
+  --bootstrap-server localhost:9092 \
+  --create \
+  --if-not-exists \
+  --topic appointment-events \
+  --partitions 1 \
+  --replication-factor 1
 ```
 
 Run backend:
